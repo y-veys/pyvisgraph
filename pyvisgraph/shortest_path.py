@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from heapq import heapify, heappush, heappop
-from pyvisgraph.visible_vertices import edge_distance
+from visible_vertices import edge_distance
 
 try:
     dict.iteritems

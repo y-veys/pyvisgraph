@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from collections import defaultdict
-
+import matplotlib.pyplot as plt
 
 class Point(object):
     __slots__ = ('x', 'y', 'polygon_id')
@@ -53,6 +53,37 @@ class Point(object):
 
     def __repr__(self):
         return "Point(%.2f, %.2f)" % (self.x, self.y)
+
+    def __add__(self, point):
+        return Point(self.x + point.x, self.y + point.y)
+
+    def __sub__(self, point):
+        return Point(self.x - point.x, self.y - point.y)
+
+    def __rmul__(self, scalar):
+        return Point(self.x * scalar, self.y * scalar)
+    
+    def __mul__(self, scalar):
+        return Point(self.x * scalar, self.y * scalar)
+
+    def __truediv__(self, scalar):
+        return Point(self.x / scalar, self.y / scalar)
+
+    def __min__(self, point):
+        if self < point: 
+            return self
+        else: 
+            return point 
+
+    def __max__(self, point):
+        if self > point: 
+            return self
+        else: 
+            return point
+
+    def __iter__(self):
+        yield self.x
+        yield self.y
 
 
 class Edge(object):
@@ -88,6 +119,8 @@ class Edge(object):
 
     def __hash__(self):
         return self.p1.__hash__() ^ self.p2.__hash__()
+
+    
 
 
 class Graph(object):
@@ -162,3 +195,5 @@ class Graph(object):
 
     def __repr__(self):
         return self.__str__()
+
+

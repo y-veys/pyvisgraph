@@ -27,10 +27,10 @@ from multiprocessing import Pool
 from tqdm import tqdm
 from warnings import warn
 
-from pyvisgraph.graph import Graph, Edge
-from pyvisgraph.shortest_path import shortest_path
-from pyvisgraph.visible_vertices import visible_vertices, point_in_polygon
-from pyvisgraph.visible_vertices import closest_point
+from graph import Graph, Edge
+from shortest_path import shortest_path
+from visible_vertices import visible_vertices, point_in_polygon
+from visible_vertices import closest_point
 
 PYTHON3 = version_info[0] == 3
 if PYTHON3:
@@ -39,9 +39,7 @@ if PYTHON3:
 else:
     import cPickle as pickle
 
-
 class VisGraph(object):
-
     def __init__(self):
         self.graph = None
         self.visgraph = None

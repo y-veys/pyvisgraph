@@ -23,7 +23,7 @@ SOFTWARE.
 """
 from __future__ import division
 from math import pi, sqrt, atan, acos
-from pyvisgraph.graph import Point
+from graph import Point
 
 INF = 10000
 CCW = 1
@@ -35,7 +35,7 @@ COLIN_TOLERANCE = 10
 T = 10**COLIN_TOLERANCE
 T2 = 10.0**COLIN_TOLERANCE
 
-def visible_vertices(point, graph, origin=None, destination=None, scan='full'):
+def visible_vertices(point, graph, origin=None, destination=None, scan='half'):
     """Returns list of Points in graph visible by point.
 
     If origin and/or destination Points are given, these will also be checked
@@ -76,29 +76,35 @@ def visible_vertices(point, graph, origin=None, destination=None, scan='full'):
 
         # Check if p is visible from point
         is_visible = False
-        # ...Non-collinear points
-        if prev is None or ccw(point, prev, p) != COLLINEAR or not on_segment(point, prev, p):
-            if len(open_edges) == 0:
-                is_visible = True
-            elif not edge_intersect(point, p, open_edges.smallest()):
-                is_visible = True
-        # ...For collinear points, if previous point was not visible, p is not
-        elif not prev_visible:
+        perturbed_point, perturbed_p = perturbed_points(point, p)
+        if point.polygon_id != -1 and point_in_single_polygon(perturbed_point, graph, point.polygon_id): 
             is_visible = False
-        # ...For collinear points, if previous point was visible, need to check
-        # that the edge from prev to p does not intersect any open edge.
-        else:
-            is_visible = True
-            for edge in open_edges:
-                if prev not in edge and edge_intersect(prev, p, edge):
-                    is_visible = False
-                    break
-            if is_visible and edge_in_polygon(prev, p, graph):
-                    is_visible = False
+        elif p.polygon_id != -1 and point_in_single_polygon(perturbed_p, graph, p.polygon_id):
+            is_visible = False 
+        else: 
+            # ...Non-collinear points
+            if prev is None or ccw(point, prev, p) != COLLINEAR or not on_segment(point, prev, p):
+                if len(open_edges) == 0:
+                    is_visible = True
+                elif not edge_intersect(point, p, open_edges.smallest()):
+                    is_visible = True
+            # ...For collinear points, if previous point was not visible, p is not
+            elif not prev_visible:
+                is_visible = False
+            # ...For collinear points, if previous point was visible, need to check
+            # that the edge from prev to p does not intersect any open edge.
+            else:
+                is_visible = True
+                for edge in open_edges:
+                    if prev not in edge and edge_intersect(prev, p, edge):
+                        is_visible = False
+                        break
+                if is_visible and edge_in_polygon(prev, p, graph):
+                        is_visible = False
 
-        # Check if the visible edge is interior to its polygon
-        if is_visible and p not in graph.get_adjacent_points(point):
-            is_visible = not edge_in_polygon(point, p, graph)
+            # Check if the visible edge is interior to its polygon
+            if is_visible and p not in graph.get_adjacent_points(point):
+                is_visible = not edge_in_polygon(point, p, graph)
 
         if is_visible: visible.append(p)
 
@@ -110,6 +116,13 @@ def visible_vertices(point, graph, origin=None, destination=None, scan='full'):
         prev = p
         prev_visible = is_visible
     return visible
+
+def perturbed_points(p1, p2, epsilon=0.01): 
+    """Given two points, return two points that are perturbed from the original along the line connecting the two."""
+    q = epsilon / edge_distance(p1, p2)
+    delta = p1 - p2 
+
+    return (p1 + q * delta, p2 - q * delta)
 
 
 def polygon_crossing(p1, poly_edges):
@@ -136,7 +149,6 @@ def polygon_crossing(p1, poly_edges):
         return False
     return True
 
-
 def edge_in_polygon(p1, p2, graph):
     """Return true if the edge from p1 to p2 is interior to any polygon
     in graph."""
@@ -147,6 +159,11 @@ def edge_in_polygon(p1, p2, graph):
     mid_point = Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2)
     return polygon_crossing(mid_point, graph.polygons[p1.polygon_id])
 
+def point_in_single_polygon(p, graph, polygon_id):
+    """Return true if the point p is interior to a specific polygon in graph."""
+    if polygon_crossing(p, graph.polygons[polygon_id]):
+        return True
+    return False
 
 def point_in_polygon(p, graph):
     """Return true if the point p is interior to any polygon in graph."""
@@ -154,7 +171,6 @@ def point_in_polygon(p, graph):
         if polygon_crossing(p, graph.polygons[polygon]):
             return polygon
     return -1
-
 
 def unit_vector(c, p):
     magnitude = edge_distance(c, p)
